@@ -1,0 +1,16 @@
+services:
+  postgres_db:
+    image: postgres:16-alpine3.23
+    container_name: postgres_alpine_container
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: wilpolanco
+      POSTGRES_DB: ventas
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: always
+
+volumes:
+  postgres_data:
