@@ -11,47 +11,54 @@ public class DBConnection {
     private static Connection conn;
     private static Properties props = new Properties();
 
-    /*
-    private static String url = "jdbc:mysql://localhost/sysventas";
-    private static String user = "root";
-    private static String pass = "";*/
-
     static {
-        try(InputStream input = DBConnection.class.getClassLoader().getResourceAsStream("config.properties")){
-            if(input == null){
-                System.out.println("No se pudo encontrar el archivo config.properties");
-            }else{
+        try (InputStream input = DBConnection.class.getClassLoader().getResourceAsStream("config.properties")) {
+            if (input == null) {
+                System.err.println("Error: No se pudo encontrar el archivo config.properties en el classpath");
+            } else {
                 props.load(input);
             }
-        }catch (Exception e){
-            e.printStackTrace();
+        } catch (Exception e) {
+            System.err.println("Error al cargar config.properties: " + e.getMessage());
         }
     }
 
-    public static Connection connect() throws SQLException{
-
-	try {
-            Class.forName("org.postgresql.Driver").newInstance();
-            //Class.forName("com.mysql.jdbc.Driver").newInstance();
-	} catch(ClassNotFoundException cnfe) {
-            System.err.println("Error: "+cnfe.getMessage());
-	} catch(InstantiationException ie) {
-            System.err.println("Error: "+ie.getMessage());
-	} catch(IllegalAccessException iae) {
-            System.err.println("Error: "+iae.getMessage());
-	}
-        String url = props.getProperty("db.url");
-        String user = props.getProperty("db.user");
-        String pass = props.getProperty("db.pass");
-
-        conn = DriverManager.getConnection(url,user,pass);
+    /**
+     * Retorna la conexión existente o crea una nueva si no existe o está cerrada.
+     * Implementa una lógica similar a Singleton para la instancia de Connection.
+     */
+    public static Connection getConnection() throws SQLException {
+        try {
+            if (conn == null || conn.isClosed()) {
+                String url = props.getProperty("db.url");
+                String user = props.getProperty("db.user");
+                String pass = props.getProperty("db.pass");
+                
+                if (url == null || user == null || pass == null) {
+                    throw new SQLException("Faltan propiedades de configuración en config.properties");
+                }
+                
+                conn = DriverManager.getConnection(url, user, pass);
+                System.out.println("Conexión a la base de datos establecida correctamente.");
+            }
+        } catch (SQLException e) {
+            System.err.println("Error al conectar a la base de datos: " + e.getMessage());
+            throw e;
+        }
         return conn;
-	}
-	
-    public static Connection getConnection() throws SQLException, ClassNotFoundException{
-        if(conn !=null && !conn.isClosed())
-            return conn;
-            connect();
-            return conn;
+    }
+
+    /**
+     * Método para cerrar la conexión explícitamente si es necesario.
+     */
+    public static void closeConnection() {
+        try {
+            if (conn != null && !conn.isClosed()) {
+                conn.close();
+                System.out.println("Conexión cerrada.");
+            }
+        } catch (SQLException e) {
+            System.err.println("Error al cerrar la conexión: " + e.getMessage());
+        }
     }
 }

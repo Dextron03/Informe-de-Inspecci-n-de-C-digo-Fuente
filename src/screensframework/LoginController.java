@@ -16,6 +16,9 @@ import javafx.fxml.Initializable;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
 import javax.swing.JOptionPane;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Alert.AlertType;
+import java.sql.PreparedStatement;
 import screensframework.DBConnect.DBConnection;
 import org.apache.commons.codec.digest.DigestUtils;
 
@@ -54,7 +57,6 @@ public class LoginController implements Initializable, ControlledScreen {
             return;
         }
         
-        
         if (!validation.validarMaximo(tfUsuario.getText(), "USUARIO", 20, 2)) {
             return;
         }
@@ -65,27 +67,36 @@ public class LoginController implements Initializable, ControlledScreen {
         
         //______________________________________________________
         /* SE HACE EL LLAMADO AL MODELO PARA ENTRAR AL SISTEMA */
+        String sql = "SELECT * FROM usuarios WHERE usuario = ? AND pass = ?";
+        
         try {
-            conexion = DBConnection.connect();
-            String sql = "SELECT * FROM "
-                    + " usuarios WHERE "
-                    + " usuario = '"+tfUsuario.getText()+"' AND "
-                    + " pass = '"+DigestUtils.sha1Hex(tfPass.getText())+"'";
-            ResultSet rs = conexion.createStatement().executeQuery(sql);
+            conexion = DBConnection.getConnection();
+            PreparedStatement pstmt = conexion.prepareStatement(sql);
+            pstmt.setString(1, tfUsuario.getText());
+            pstmt.setString(2, DigestUtils.sha1Hex(tfPass.getText()));
             
-            boolean existeUsuario = rs.next();
+            ResultSet rs = pstmt.executeQuery();
             
-            if (existeUsuario) {
+            if (rs.next()) {
                 tfUsuario.setText("");
                 tfPass.setText("");
                 controlador.setScreen(ScreensFramework.contenidoID);
             } else {
-                JOptionPane.showMessageDialog(null, "Este usuario no está registrado");
+                mostrarAlerta("Login Fallido", "Este usuario no está registrado o la contraseña es incorrecta.", AlertType.ERROR);
             }
             
         } catch (SQLException e) {
-            System.out.println("Error " + e.getMessage());
+            System.err.println("Error en login: " + e.getMessage());
+            mostrarAlerta("Error de Conexión", "No se pudo conectar a la base de datos.", AlertType.ERROR);
         }
+    }
+
+    private void mostrarAlerta(String titulo, String mensaje, AlertType tipo) {
+        Alert alerta = new Alert(tipo);
+        alerta.setTitle(titulo);
+        alerta.setHeaderText(null);
+        alerta.setContentText(mensaje);
+        alerta.showAndWait();
     }
     
     @FXML

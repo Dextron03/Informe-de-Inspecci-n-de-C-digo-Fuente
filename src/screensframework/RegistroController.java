@@ -51,7 +51,7 @@ public class RegistroController implements Initializable, ControlledScreen {
                         if (!tfAddUser.getText().equals("")) {
                             try {
                                 
-                                conexion = DBConnection.connect();
+                                conexion = DBConnection.getConnection();
                                 
                                 String sql = "SELECT usuario FROM "
                                         + "usuarios WHERE "
@@ -125,7 +125,7 @@ public class RegistroController implements Initializable, ControlledScreen {
         //______________________________________________________________
         // PREPARAMOS LA SENTENCIA PARA INSERTAR LOS DATOS
         try {
-            conexion = DBConnection.connect();
+            conexion = DBConnection.getConnection();
             String sql = "INSERT INTO usuario "
                     + "(nombre, apellido, sexo, email, usuario, pass) "
                     + "VALUES (?, ?, ?, ?, ?, ?)";
