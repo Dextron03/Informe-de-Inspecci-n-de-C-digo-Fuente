@@ -26,3 +26,4 @@ Thumbs.db
 
 # Librerías (opcional, pero recomendado si se usan gestores de dependencias)
 # librerias/
+ config.properties

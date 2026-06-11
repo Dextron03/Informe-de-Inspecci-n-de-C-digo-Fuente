@@ -1,21 +1,35 @@
 package screensframework.DBConnect;
 
+import java.io.InputStream;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.util.Properties;
 
 public class DBConnection {
     
     private static Connection conn;
-    private static String url = "jdbc:postgresql://localhost:5432/ventas";
-    private static String user = "postgres";
-    private static String pass = "wilpolanco";
+    private static Properties props = new Properties();
+
     /*
     private static String url = "jdbc:mysql://localhost/sysventas";
     private static String user = "root";
     private static String pass = "";*/
-    
+
+    static {
+        try(InputStream input = DBConnection.class.getClassLoader().getResourceAsStream("config.properties")){
+            if(input == null){
+                System.out.println("No se pudo encontrar el archivo config.properties");
+            }else{
+                props.load(input);
+            }
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+    }
+
     public static Connection connect() throws SQLException{
+
 	try {
             Class.forName("org.postgresql.Driver").newInstance();
             //Class.forName("com.mysql.jdbc.Driver").newInstance();
@@ -26,8 +40,12 @@ public class DBConnection {
 	} catch(IllegalAccessException iae) {
             System.err.println("Error: "+iae.getMessage());
 	}
-            conn = DriverManager.getConnection(url,user,pass);
-            return conn;
+        String url = props.getProperty("db.url");
+        String user = props.getProperty("db.user");
+        String pass = props.getProperty("db.pass");
+
+        conn = DriverManager.getConnection(url,user,pass);
+        return conn;
 	}
 	
     public static Connection getConnection() throws SQLException, ClassNotFoundException{
