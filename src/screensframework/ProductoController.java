@@ -16,6 +16,11 @@ import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.geometry.Pos;
+import javafx.print.PrinterJob;
+import javafx.print.PageLayout;
+import javafx.scene.Node;
+import javafx.scene.transform.Scale;
+import javafx.stage.Window;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.TableCell;
@@ -410,6 +415,53 @@ public class ProductoController implements Initializable, ControlledScreen {
         btModificarProducto.setStyle("-fx-background-color:grey");
     }
     
+    @FXML
+    private void vistaImpresion(ActionEvent event) {
+
+        // El nodo que queremos imprimir: la tabla de productos
+        Node nodo = tablaProducto;
+
+        // Ventana actual (para mostrar el diálogo de impresión encima de ella)
+        Window ventana = tablaProducto.getScene().getWindow();
+
+        // Creamos el trabajo de impresión
+        PrinterJob trabajo = PrinterJob.createPrinterJob();
+
+        if (trabajo == null) {
+            JOptionPane.showMessageDialog(null,
+                    "No se encontró ninguna impresora instalada.");
+            return;
+        }
+
+        // Mostramos el diálogo para que el usuario elija impresora/opciones
+        boolean continuar = trabajo.showPrintDialog(ventana);
+        if (!continuar) {
+            return; // el usuario canceló
+        }
+
+        // Escalamos la tabla para que entre en el ancho de la página
+        PageLayout pagina = trabajo.getJobSettings().getPageLayout();
+        double escalaX = pagina.getPrintableWidth()  / nodo.getBoundsInParent().getWidth();
+        double escalaY = pagina.getPrintableHeight() / nodo.getBoundsInParent().getHeight();
+        double escala  = Math.min(escalaX, escalaY);
+
+        Scale transformacion = new Scale(escala, escala);
+        nodo.getTransforms().add(transformacion);
+
+        // Imprimimos la página
+        boolean impreso = trabajo.printPage(nodo);
+
+        // Quitamos la transformación para no dejar la tabla escalada en pantalla
+        nodo.getTransforms().remove(transformacion);
+
+        if (impreso) {
+            trabajo.endJob();
+            JOptionPane.showMessageDialog(null, "Impresión enviada correctamente.");
+        } else {
+            JOptionPane.showMessageDialog(null, "No se pudo imprimir la tabla.");
+        }
+    }
+
     @FXML
     private void irInicioContenido(ActionEvent event) {
         controlador.setScreen(ScreensFramework.contenidoID);
