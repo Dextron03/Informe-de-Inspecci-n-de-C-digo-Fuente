@@ -126,8 +126,12 @@ public class RegistroController implements Initializable, ControlledScreen {
         // PREPARAMOS LA SENTENCIA PARA INSERTAR LOS DATOS
         try {
             conexion = DBConnection.getConnection();
-            String sql = "INSERT INTO usuario "
-                    + "(nombre, apellido, sexo, email, usuario, pass) "
+            // BUG corregido: la tabla de usuarios es "usuarios" (plural, es la unica
+            // tabla en plural del esquema) y la columna del correo es "correo".
+            // Antes decia "INSERT INTO usuario" y la columna "email", por lo que el
+            // INSERT siempre fallaba (relacion/columna inexistente).
+            String sql = "INSERT INTO usuarios "
+                    + "(nombre, apellido, sexo, correo, usuario, pass) "
                     + "VALUES (?, ?, ?, ?, ?, ?)";
             
             PreparedStatement estado = conexion.prepareStatement(sql);
@@ -147,11 +151,16 @@ public class RegistroController implements Initializable, ControlledScreen {
             cbAddsex.setValue("");
             
             int n = estado.executeUpdate();
-            
+
+            // BUG corregido: la logica del mensaje estaba invertida. Cuando n > 0 el
+            // INSERT tuvo exito, asi que ahora se informa el registro correcto; el
+            // mensaje de fallo solo se muestra si no se afecto ninguna fila.
             if (n > 0) {
+                JOptionPane.showMessageDialog(null, "Usuario registrado correctamente");
+            } else {
                 JOptionPane.showMessageDialog(null, "Fallo el registro");
-            } 
-            
+            }
+
             estado.close();
             
         } catch (SQLException e) {
